@@ -8,6 +8,7 @@ import com.duyhk.bewebbanhang.repository.SanPhamRepository;
 import com.duyhk.bewebbanhang.service.SanPhamService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ public class SanPhamServiceIplm implements SanPhamService {
     private final SanPhamRepository sanPhamRepo;
     private final ModelMapper mapper;
     private final LoaiSanPhamRepository loaiSanPhamRepo;
+    private final CloudinaryServiceIplm cloudinaryService;
 
     @Override
     public List<SanPhamDTO> getAll() {
@@ -47,7 +49,7 @@ public class SanPhamServiceIplm implements SanPhamService {
     public String create(SanPhamDTO dto) throws IOException {
         List<String> images;
         if (dto.getFiles() != null) {
-            images = processFiles(dto.getFiles());
+            images = processFilesCloud(dto.getFiles());
         } else {
             throw new RuntimeException("Vui long chon file");
         }
@@ -60,7 +62,6 @@ public class SanPhamServiceIplm implements SanPhamService {
         sanPhamRepo.save(sanPham);
         return "Thêm thành công";
     }
-
 
 
     @Override
@@ -96,7 +97,24 @@ public class SanPhamServiceIplm implements SanPhamService {
         entity.setLoaiSanPham(lsp);
     }
 
-    protected List<String> processFiles(List<MultipartFile> files) throws IOException {
+    private List<String> processFilesCloud(List<MultipartFile> files) {
+        List<String> images = new ArrayList<>();
+        try {
+            for (MultipartFile multipartFile : files) {
+                String url = cloudinaryService.uploadFile(multipartFile, "images");
+                if (url == null) {
+                    throw new RuntimeException("Upload file failed");
+                }
+                images.add(url);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return images;
+    }
+
+    private List<String> processFiles(List<MultipartFile> files) throws IOException {
         List<String> images = new ArrayList<>();
         for (MultipartFile multipartFile : files) {
             String name = multipartFile.getOriginalFilename();
