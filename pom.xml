@@ -75,6 +75,16 @@
             <artifactId>cloudinary-http44</artifactId>
             <version>1.31.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-redis -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>4.3.1</version> <!-- Ensure this version is compatible -->
+        </dependency>
     </dependencies>
 
     <build>

@@ -24,4 +24,14 @@ public class SanPhamController {
     public ResponseEntity<String> create(@ModelAttribute SanPhamDTO sanPhamDTO) throws IOException {
         return  ResponseEntity.ok(sanPhamService.create(sanPhamDTO));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> update(@ModelAttribute SanPhamDTO sanPhamDTO, @PathVariable Long id) throws IOException {
+        return  ResponseEntity.ok(sanPhamService.update(sanPhamDTO, id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id){
+        return ResponseEntity.ok(sanPhamService.delete(id));
+    }
 }
