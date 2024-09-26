@@ -1,21 +1,15 @@
-package com.duyhk.bewebbanhang.entity;
+package com.duyhk.bewebbanhang.dto;
 
-import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity
-public class HoaDon {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+public class HoaDonDTO {
     Long id;
     String maHoaDon;
     Long tongSoSanPham;
@@ -27,8 +21,6 @@ public class HoaDon {
     LocalDate ngayTao;
     LocalDate ngayHoanThanh;
     String lyDoHuy;
-    Integer trangThai; // 1 đang cho, 2 cho lay hang, 3 dang giao hang, 4 da hoan thanh, 0 la huy
-    Integer loaiHoaDon; // 1 online, 2 tại quầy
-    @ManyToOne
-    TaiKhoan taiKhoan;
+    Integer trangThai;
+    Integer loaiHoaDon;
 }

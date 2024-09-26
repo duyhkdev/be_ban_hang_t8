@@ -3,6 +3,7 @@ package com.duyhk.bewebbanhang.controller;
 import com.duyhk.bewebbanhang.dto.MauSacDTO;
 import com.duyhk.bewebbanhang.entity.MauSac;
 import com.duyhk.bewebbanhang.service.IMauSacService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class MauSacController {
     }
 
     @PostMapping
-    public ResponseEntity<String> create(@RequestBody MauSacDTO dto){
+    public ResponseEntity<String> create(@RequestBody @Valid MauSacDTO dto){
         return ResponseEntity.ok(mauSacService.create(dto));
     }
 

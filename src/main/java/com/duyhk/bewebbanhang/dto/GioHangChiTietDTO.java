@@ -1,7 +1,5 @@
 package com.duyhk.bewebbanhang.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -10,8 +8,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class MauSacDTO {
+public class GioHangChiTietDTO {
     Long id;
-    @NotNull(message = "Ten khong duoc de trong")
-    String ten;
+    Long soLuong;
+    SanPhamChiTietDTO sanPhamChiTiet;
+    Long gioHangId;
 }

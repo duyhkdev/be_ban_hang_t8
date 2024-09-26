@@ -24,4 +24,9 @@ public class HoaDonChiTiet {
     @ManyToOne
     @JoinColumn(name = "hoa_don_id")
     HoaDon hoaDon;
+
+    public void setSanPhamChiTiet(SanPhamChiTiet sanPhamChiTiet) {
+        this.sanPhamChiTiet = sanPhamChiTiet;
+        this.donGia = sanPhamChiTiet.getGia();
+    }
 }
