@@ -3,14 +3,16 @@ package com.duyhk.bewebbanhang.dto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ThongTinDatHangDTO {
+public class ThongTinDatHangKhongDangNhapDTO {
     String soDienThoai;
     String diaChi;
     String hoVaTen;
-    Long taiKhoanId;
+    List<GioHangChiTietDTO> listGioHang;
 }

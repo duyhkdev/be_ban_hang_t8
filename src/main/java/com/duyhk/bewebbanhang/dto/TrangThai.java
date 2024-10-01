@@ -1,9 +1,11 @@
 package com.duyhk.bewebbanhang.dto;
 
 public enum TrangThai {
-    DANGCHO(1),
-    DANGTHU(2),
-    HOANTHANH(3);
+    DA_HUY(0),
+    DANG_CHO(1),
+    CHO_LAY_HANG(2),
+    DANG_GIAO_HANG(3),
+    HOAN_THANH(4);
 
     public int status;
 

@@ -75,7 +75,7 @@ public class DatHangOnlineServiceIplm implements DatHangOnlineService {
         }
      */
     @Override
-    public String datHang(ThongTinDatHangDTO dto) {
+    public String datHang(ThongTinDatHangRequest dto) {
         /*
             - Kiem tra dang nhap
             - Nhap day du thong tin khach hang
@@ -125,14 +125,8 @@ public class DatHangOnlineServiceIplm implements DatHangOnlineService {
             hdct.setSanPhamChiTiet(spct);
             listEntityHdct.add(hdct);
 
-            spct.setSoLuongTonKho(spct.getSoLuongTonKho() - gioHangChiTiet.getSoLuong());
-            spct.setSoLuongDaBan(spct.getSoLuongDaBan() + gioHangChiTiet.getSoLuong());
-            listEntitySpct.add(spct);
+            updateSoLuongSanPham(gioHangChiTiet.getSoLuong(), gioHangChiTiet.getSanPhamChiTiet().getId(), listEntitySpct, listEntitySp);
 
-            SanPham sanPham = spct.getSanPham();
-            sanPham.setSoLuongTonKho(sanPham.getSoLuongTonKho() - gioHangChiTiet.getSoLuong());
-            sanPham.setSoLuongDaBan(sanPham.getSoLuongDaBan() + gioHangChiTiet.getSoLuong());
-            listEntitySp.add(sanPham);
         }
         gioHang.setTongSoTien(0l);
         gioHang.setTongSoSanPham(0l);
@@ -149,26 +143,128 @@ public class DatHangOnlineServiceIplm implements DatHangOnlineService {
 
 //        sanPhamChiTietRepo.checkSoLuongDatHang(dto.get, )
 
-        taiKhoan.setTongHoaDon(taiKhoan.getTongHoaDon() + 1);
-        taiKhoan.setTongTien(taiKhoan.getTongTien() + thanhTien);
-        boolean kiemTraTKV =  taiKhoan.getTongTien() > 10000000 && taiKhoan.getTongHoaDon() > 25;
-        taiKhoan.setHangTaiKhoan(kiemTraTKV ? 2 : 1 );
-        taiKhoanRepo.save(taiKhoan);
         return "Dat hang thanh cong";
+    }
+
+    @Override
+    public String datHangKhongDangNhap(ThongTinDatHangKhongDangNhapDTO dto) {
+        List<GioHangChiTietDTO> listGioHangChitiet = dto.getListGioHang();
+
+        TaiKhoan taiKhoan = new TaiKhoan();
+        taiKhoan.setRole(Role.KHACHHANG);
+        taiKhoan.setEmail(dto.getSoDienThoai());
+        taiKhoan.setHoVaTen(dto.getSoDienThoai());
+        taiKhoan.setTongTien(0l);
+        taiKhoan.setTongHoaDon(0l);
+        taiKhoan.setHangTaiKhoan(1);
+        taiKhoan.setTrangThai(1);
+        taiKhoan = taiKhoanRepo.save(taiKhoan);
+
+
+        HoaDon hoaDon = new HoaDon();
+        hoaDon.setHoVaTen(dto.getHoVaTen());
+        hoaDon.setDiaChi(dto.getDiaChi());
+        hoaDon.setSoDienThoai(dto.getSoDienThoai());
+        hoaDon.setTaiKhoan(taiKhoan);
+        hoaDon.setNgayTao(LocalDate.now());
+        hoaDon = hoaDonRepo.save(hoaDon);
+
+        List<HoaDonChiTiet> listHdct = new ArrayList<>();
+        List<SanPhamChiTiet> listEntitySpct = new ArrayList<>();
+        List<SanPham> listEntitySp = new ArrayList<>();
+
+        Long thanhTien = 0l;
+        Long soSanPham = 0l;
+
+        for (GioHangChiTietDTO x : listGioHangChitiet) {
+            updateSoLuongSanPham(x.getSoLuong(), x.getSanPhamChiTiet().getId(), listEntitySpct, listEntitySp);
+            HoaDonChiTiet hdct = new HoaDonChiTiet();
+            SanPhamChiTiet spct = sanPhamChiTietRepo.findById(x.getSanPhamChiTiet().getId())
+                    .orElseThrow(() -> new RuntimeException("Sp không tồn tịa"));
+            hdct.setSanPhamChiTiet(spct);
+            hdct.setSoLuong(x.getSoLuong());
+            hdct.setThanhTien(spct.getGia() * x.getSoLuong());
+            hdct.setDonGia(spct.getGia());
+            thanhTien += hdct.getSoLuong() * hdct.getDonGia();
+            soSanPham += 1;
+            hdct.setHoaDon(hoaDon);
+            listHdct.add(hdct);
+        }
+        hoaDon.setTongSoTien(thanhTien);
+        hoaDon.setTongSoSanPham(soSanPham);
+
+        hoaDonRepo.save(hoaDon);
+        hoaDonChiTietRepo.saveAll(listHdct);
+        sanPhamChiTietRepo.saveAll(listEntitySpct);
+        sanPhamRepo.saveAll(listEntitySp);
+
+        return "Đặt hàng thành công";
+    }
+
+    private void updateSoLuongSanPham(Long soLuong, Long idSpct, List<SanPhamChiTiet> listEntitySpct, List<SanPham> listEntitySp) {
+        SanPhamChiTiet spct = sanPhamChiTietRepo.findById(idSpct)
+                .orElseThrow(() -> new RuntimeException("Sp không tồn tịa"));
+        spct.setSoLuongTonKho(spct.getSoLuongTonKho() - soLuong);
+        spct.setSoLuongDaBan(spct.getSoLuongDaBan() + soLuong);
+        listEntitySpct.add(spct);
+
+        SanPham sanPham = spct.getSanPham();
+        sanPham.setSoLuongTonKho(sanPham.getSoLuongTonKho() - soLuong);
+        sanPham.setSoLuongDaBan(sanPham.getSoLuongDaBan() + soLuong);
+        listEntitySp.add(sanPham);
     }
 
     @Override
     public String updateTrangThai(Long id, Integer trangThai) {
         HoaDon hoaDon = hoaDonRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException(ExceptionEnum.HOA_DON_NOT_FOUND.name()));
-        if(trangThai == 2 && hoaDon.getTrangThai() != 1){
-            throw new RuntimeException("Hoa don da duoc thanh toan");
-        }
-        TrangThai.DANGCHO.
-        if(trangThai == 3 && hoaDon.getTrangThai() != TrangThai.HOANTHANH.status){
-            throw new RuntimeException("Hoa don da duoc in hoa don");
+                .orElseThrow(() -> new RuntimeException(ExceptionEnum.HOA_DON_NOT_FOUND.message));
+        if ((trangThai == TrangThai.CHO_LAY_HANG.status && hoaDon.getTrangThai() != TrangThai.DANG_CHO.status)
+                || (trangThai == TrangThai.DANG_GIAO_HANG.status && hoaDon.getTrangThai() != TrangThai.CHO_LAY_HANG.status)
+                || (trangThai == TrangThai.HOAN_THANH.status && hoaDon.getTrangThai() != TrangThai.DANG_GIAO_HANG.status)
+                || (trangThai == TrangThai.DA_HUY.status && hoaDon.getTrangThai() == TrangThai.HOAN_THANH.status)) {
+            throw new RuntimeException("Hoa don da thay doi trang thai khac");
         }
 
-        return null;
+        if (trangThai == TrangThai.DA_HUY.status) {
+            huyHoaDon(hoaDon);
+        } else if (trangThai == TrangThai.HOAN_THANH.status) {
+            hoanThanhHoaDon(hoaDon);
+        }
+
+        return "Sửa thành công";
+    }
+
+    private void hoanThanhHoaDon(HoaDon hoaDon) {
+        hoaDon.setTrangThai(TrangThai.HOAN_THANH.status);
+        hoaDon.setNgayHoanThanh(LocalDate.now());
+        hoaDonRepo.save(hoaDon);
+        TaiKhoan taiKhoan = hoaDon.getTaiKhoan();
+        taiKhoan.setTongHoaDon(taiKhoan.getTongHoaDon() + 1);
+        taiKhoan.setTongTien(taiKhoan.getTongTien() + hoaDon.getTongSoTien());
+        boolean kiemTraTKV = taiKhoan.getTongTien() > 10000000 && taiKhoan.getTongHoaDon() > 25;
+        taiKhoan.setHangTaiKhoan(kiemTraTKV ? 2 : 1);
+        taiKhoanRepo.save(taiKhoan);
+    }
+
+    private void huyHoaDon(HoaDon hoaDon) {
+        hoaDon.setTrangThai(TrangThai.DA_HUY.status);
+        List<HoaDonChiTiet> listHdct = hoaDonChiTietRepo.findByHoaDonId(hoaDon.getId())
+                .orElse(null);
+        if (listHdct == null) {
+            hoaDonRepo.save(hoaDon);
+            return;
+        }
+        hoaDonRepo.save(hoaDon);
+        for (HoaDonChiTiet hdct : listHdct) {
+            SanPhamChiTiet spct = hdct.getSanPhamChiTiet();
+            SanPham sp = spct.getSanPham();
+            spct.setSoLuongTonKho(spct.getSoLuongTonKho() + hdct.getSoLuong());
+            spct.setSoLuongDaBan(spct.getSoLuongDaBan() - hdct.getSoLuong());
+            sp.setSoLuongTonKho(sp.getSoLuongTonKho() + hdct.getSoLuong());
+            sp.setSoLuongDaBan(sp.getSoLuongDaBan() - hdct.getSoLuong());
+            sanPhamRepo.save(sp);
+            sanPhamChiTietRepo.save(spct);
+        }
+
     }
 }

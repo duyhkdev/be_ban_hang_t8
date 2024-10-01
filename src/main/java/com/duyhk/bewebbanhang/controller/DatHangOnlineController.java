@@ -1,7 +1,8 @@
 package com.duyhk.bewebbanhang.controller;
 
 import com.duyhk.bewebbanhang.dto.ResponseDTO;
-import com.duyhk.bewebbanhang.dto.ThongTinDatHangDTO;
+import com.duyhk.bewebbanhang.dto.ThongTinDatHangRequest;
+import com.duyhk.bewebbanhang.dto.ThongTinDatHangResponse;
 import com.duyhk.bewebbanhang.dto.ThongTinHoaDonDTO;
 import com.duyhk.bewebbanhang.service.DatHangOnlineService;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +23,11 @@ public class DatHangOnlineController {
     }
 
     @PostMapping
-    public ResponseDTO<Void> datHang(@RequestBody ThongTinDatHangDTO thongTinDatHangDTO) {
-        return ResponseDTO.<Void>builder()
-                .message(datHangOnlineService.datHang(thongTinDatHangDTO))
+    public ResponseDTO<ThongTinDatHangResponse> datHang(@RequestBody ThongTinDatHangRequest thongTinDatHangRequest) {
+        return ResponseDTO.<ThongTinDatHangResponse>builder()
+                .data(ThongTinDatHangResponse.builder()
+                        .message(datHangOnlineService.datHang(thongTinDatHangRequest))
+                        .build())
                 .build();
     }
 
