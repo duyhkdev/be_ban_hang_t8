@@ -8,4 +8,7 @@ import java.util.Optional;
 
 public interface HoaDonChiTietRepo extends JpaRepository<HoaDonChiTiet, Long> {
     Optional<List<HoaDonChiTiet>> findByHoaDonId(Long id);
+
+    Optional<HoaDonChiTiet>
+    findByHoaDonIdAndSanPhamChiTietId(Long id, Long id1);
 }
