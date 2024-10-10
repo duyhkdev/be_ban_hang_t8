@@ -16,6 +16,6 @@ public interface SanPhamChiTietRepository extends JpaRepository<SanPhamChiTiet, 
                 and s.id = :id
             """)
     Optional<SanPhamChiTiet> checkSoLuongDatHang(
-            @Param("soLuongTonKho") Long soLuongMua,
+            @Param("soLuongMua") Long soLuongMua,
             @Param("id") Long id);
 }

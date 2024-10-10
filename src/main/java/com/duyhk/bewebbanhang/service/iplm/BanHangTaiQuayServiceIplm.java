@@ -1,18 +1,18 @@
 package com.duyhk.bewebbanhang.service.iplm;
 
 import com.duyhk.bewebbanhang.dto.CapNhatSoLuongTQDTO;
+import com.duyhk.bewebbanhang.dto.ThanhToanTaiQuayDTO;
 import com.duyhk.bewebbanhang.dto.ThemVaoHoaDonRequest;
 import com.duyhk.bewebbanhang.dto.TrangThai;
 import com.duyhk.bewebbanhang.entity.*;
-import com.duyhk.bewebbanhang.repository.HoaDonChiTietRepo;
-import com.duyhk.bewebbanhang.repository.HoaDonRepo;
-import com.duyhk.bewebbanhang.repository.SanPhamChiTietRepository;
-import com.duyhk.bewebbanhang.repository.SanPhamRepository;
+import com.duyhk.bewebbanhang.repository.*;
 import com.duyhk.bewebbanhang.service.BanHangTaiQuayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -35,6 +35,8 @@ public class BanHangTaiQuayServiceIplm implements BanHangTaiQuayService {
     private final HoaDonChiTietRepo hoaDonChiTietRepo;
     private final SanPhamChiTietRepository sanPhamChiTietRepo;
     private final SanPhamRepository sanPhamRepo;
+    private final TaiKhoanRepo taiKhoanRepo;
+    private final GioHangRepo gioHangRepo;
 
     @Override
     public String taoHoaDon() {
@@ -133,7 +135,7 @@ public class BanHangTaiQuayServiceIplm implements BanHangTaiQuayService {
             lay so luong ton kho + so luong cu - soluongmoi
          */
         // can tru so luong cu + so luong moi
-        spct.setSoLuongTonKho(spct.getSoLuongTonKho() +hdct.getSoLuong() - dto.getSoLuong());
+        spct.setSoLuongTonKho(spct.getSoLuongTonKho() + hdct.getSoLuong() - dto.getSoLuong());
         sp.setSoLuongTonKho(sp.getSoLuongTonKho() + hdct.getSoLuong() - dto.getSoLuong());
 
         Long thanhTienMoi = hdct.getDonGia() * dto.getSoLuong();
@@ -153,13 +155,141 @@ public class BanHangTaiQuayServiceIplm implements BanHangTaiQuayService {
     }
 
     @Override
-    public String xoaSanPhamKhoiTaoHoaDon() {
-        return null;
+    public String xoaSanPhamKhoiTaoHoaDon(Long id) {
+        HoaDonChiTiet hdct = hoaDonChiTietRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Chi tiet hoa don khong ton tai"));
+        if (hdct.getHoaDon().getTrangThai() == TrangThai.DA_HUY.status) {
+            throw new RuntimeException("Hoa don da bi huy");
+        }
+        // trang thai dh khac dang cho thi khong cho xoa
+
+        HoaDon hoaDon = hdct.getHoaDon();
+        SanPhamChiTiet spct = hdct.getSanPhamChiTiet();
+        SanPham sp = spct.getSanPham();
+
+        hoaDon.setTongSoSanPham(hoaDon.getTongSoSanPham() - 1);
+        hoaDon.setTongSoTien(hoaDon.getTongSoTien() - hdct.getThanhTien());
+
+        sp.setSoLuongTonKho(sp.getSoLuongTonKho() + hdct.getSoLuong());
+        spct.setSoLuongTonKho(sp.getSoLuongTonKho() + hdct.getSoLuong());
+
+        sanPhamRepo.save(sp);
+        sanPhamChiTietRepo.delete(spct);
+        hoaDonRepo.save(hoaDon);
+
+        hoaDonChiTietRepo.deleteById(id);
+
+        return "Xóa sản phâ thành công";
     }
 
     @Override
-    public String huyHoaDon() {
-        return null;
+    public String huyHoaDon(Long hoaDonId) {
+        HoaDon hoaDon = hoaDonRepo.findById(hoaDonId)
+                .orElseThrow(() -> new RuntimeException("Hoa don khong ton tai"));
+        if (hoaDon.getTrangThai() == TrangThai.DA_HUY.status) {
+            throw new RuntimeException("Hoa don da bi huy");
+        }
+        if (hoaDon.getTrangThai() == TrangThai.HOAN_THANH.status) {
+            throw new RuntimeException("Hoa don da thanh toan");
+        }
+        ///
+
+        hoaDon.setTrangThai(TrangThai.DA_HUY.status);
+        List<HoaDonChiTiet> hdcps = hoaDonChiTietRepo.findByHoaDonId(hoaDonId)
+                .orElse(new ArrayList<>());
+
+        for (HoaDonChiTiet x : hdcps) {
+            SanPhamChiTiet spct = x.getSanPhamChiTiet();
+            SanPham sp = spct.getSanPham();
+
+            sp.setSoLuongTonKho(sp.getSoLuongTonKho() + x.getSoLuong());
+            spct.setSoLuongTonKho(sp.getSoLuongTonKho() + x.getSoLuong());
+
+            sanPhamRepo.save(sp);
+            sanPhamChiTietRepo.save(spct);
+        }
+        hoaDonRepo.save(hoaDon);
+        return "Huy hoa don thanh cong";
+    }
+
+    @Override
+    public String thanhToan(ThanhToanTaiQuayDTO request) {
+        HoaDon hoaDon = hoaDonRepo.findById(request.getHoaDonId())
+                .orElseThrow(() -> new RuntimeException("Hoa don khong ton tai"));
+        checkStatus(hoaDon.getTrangThai());
+
+        hoaDon.setTrangThai(TrangThai.HOAN_THANH.status);
+        hoaDon.setNgayHoanThanh(LocalDate.now());
+
+        List<HoaDonChiTiet> hdcps = hoaDonChiTietRepo.findByHoaDonId(request.getHoaDonId())
+                .orElse(new ArrayList<>());
+
+        List<SanPham> sanPhamList = new ArrayList<>();
+        List<SanPhamChiTiet> sanPhamChiTietList = new ArrayList<>();
+
+        for (HoaDonChiTiet x : hdcps) {
+            SanPhamChiTiet spct = x.getSanPhamChiTiet();
+            SanPham sp = spct.getSanPham();
+
+            sp.setSoLuongDaBan(sp.getSoLuongDaBan() + x.getSoLuong());
+            spct.setSoLuongDaBan(sp.getSoLuongDaBan() + x.getSoLuong());
+
+            sanPhamList.add(sp);
+            sanPhamChiTietList.add(spct);
+        }
+
+        String soDienThoai = request.getSoDienThoai();
+        if (soDienThoai == null) {
+            hoaDon.setHoVaTen("CUSTOMER");
+        } else {
+            TaiKhoan taiKhoan = taiKhoanRepo.findBySoDienThoai(soDienThoai)
+                    .orElse(new TaiKhoan());
+            if (taiKhoan.getId() == null) {
+                // tao tai khoan va gio hang neu tai khoan chua ton tai
+                taoTaiKhoan(hoaDon.getTongSoTien(), taiKhoan, soDienThoai);
+            }else {
+                taiKhoan.setTongHoaDon(taiKhoan.getTongHoaDon() + 1);
+                taiKhoan.setTongTien(taiKhoan.getTongTien() + hoaDon.getTongSoTien());
+                boolean checkType = (taiKhoan.getTongHoaDon() >= 20
+                        || taiKhoan.getTongTien() >= 20000000);
+                taiKhoan.setHangTaiKhoan(checkType ? 2 : 1);
+                taiKhoanRepo.save(taiKhoan);
+            }
+            hoaDon.setHoVaTen(taiKhoan.getHoVaTen());
+            hoaDon.setTaiKhoan(taiKhoan);
+            hoaDon.setSoDienThoai(soDienThoai);
+        }
+        sanPhamRepo.saveAll(sanPhamList);
+        sanPhamChiTietRepo.saveAll(sanPhamChiTietList);
+        hoaDonRepo.save(hoaDon);
+        return "Thanh toan thanh cong";
+    }
+
+    private void taoTaiKhoan(Long tongSoTien, TaiKhoan taiKhoan, String soDienThoai) {
+        taiKhoan.setSoDienThoai(soDienThoai);
+        taiKhoan.setRole(Role.KHACHHANG);
+        taiKhoan.setHoVaTen(soDienThoai);
+        taiKhoan.setTongHoaDon(1l);
+        taiKhoan.setTongTien(tongSoTien);
+        taiKhoan.setHangTaiKhoan(1);
+        taiKhoan.setTrangThai(1);
+        taiKhoan = taiKhoanRepo.save(taiKhoan);
+
+        GioHang gioHang = new GioHang();
+        gioHang.setTaiKhoan(taiKhoan);
+        gioHang.setTongSoTien(0l);
+        gioHang.setTongSoSanPham(0l);
+        gioHangRepo.save(gioHang);
+    }
+
+    private void checkStatus(Integer status) {
+        if (status == TrangThai.DA_HUY.status) {
+            throw new RuntimeException("Hoa don da bi huy");
+        }///
+        if (status == TrangThai.HOAN_THANH.status) {
+            throw new RuntimeException("Hoa don da thanh toan");
+        }
+        //
     }
 
     private String taoMaHoaDon() {

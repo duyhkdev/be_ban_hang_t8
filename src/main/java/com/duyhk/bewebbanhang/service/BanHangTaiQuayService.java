@@ -1,6 +1,7 @@
 package com.duyhk.bewebbanhang.service;
 
 import com.duyhk.bewebbanhang.dto.CapNhatSoLuongTQDTO;
+import com.duyhk.bewebbanhang.dto.ThanhToanTaiQuayDTO;
 import com.duyhk.bewebbanhang.dto.ThemVaoHoaDonRequest;
 
 public interface BanHangTaiQuayService {
@@ -20,6 +21,7 @@ public interface BanHangTaiQuayService {
     String taoHoaDon();
     String themSanPhamVaoHoaDon(ThemVaoHoaDonRequest request);
     String capNhatSoLuongSanPham(CapNhatSoLuongTQDTO capNhatSoLuongTQDTO);
-    String xoaSanPhamKhoiTaoHoaDon();
-    String huyHoaDon();
+    String xoaSanPhamKhoiTaoHoaDon(Long id);
+    String huyHoaDon(Long hoaDonId);
+    String thanhToan(ThanhToanTaiQuayDTO request);
 }

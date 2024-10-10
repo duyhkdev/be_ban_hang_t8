@@ -18,6 +18,7 @@ public class TaiKhoan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String ma;
+    String soDienThoai;
     String email;
     String matKhau;
     String hoVaTen;

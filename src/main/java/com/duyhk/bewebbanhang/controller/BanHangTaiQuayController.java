@@ -1,13 +1,11 @@
 package com.duyhk.bewebbanhang.controller;
 
+import com.duyhk.bewebbanhang.dto.CapNhatSoLuongTQDTO;
 import com.duyhk.bewebbanhang.dto.ResponseDTO;
 import com.duyhk.bewebbanhang.dto.ThemVaoHoaDonRequest;
 import com.duyhk.bewebbanhang.service.BanHangTaiQuayService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/ban-hang-tai-quay")
@@ -38,6 +36,30 @@ public class BanHangTaiQuayController {
         return ResponseDTO.<Void>builder()
                 .status(200)
                 .message(banHangTaiQuayService.themSanPhamVaoHoaDon(request))
+                .build();
+    }
+
+    @PostMapping("/huy-hoa-don/{hoaDonId}")
+    public ResponseDTO<Void> huy(@PathVariable Long hoaDonId){
+        return ResponseDTO.<Void>builder()
+                .status(200)
+                .message(banHangTaiQuayService.huyHoaDon(hoaDonId))
+                .build();
+    }
+
+    @PutMapping("/cap-nhat-so-luong")
+    public ResponseDTO<Void> capNhatSoLuong(@RequestBody CapNhatSoLuongTQDTO request){
+        return ResponseDTO.<Void>builder()
+                .status(200)
+                .message(banHangTaiQuayService.capNhatSoLuongSanPham(request))
+                .build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseDTO<Void> xoaSanPhamKhoiTaoHoaDon(@PathVariable Long id){
+        return ResponseDTO.<Void>builder()
+                .status(200)
+                .message(banHangTaiQuayService.xoaSanPhamKhoiTaoHoaDon(id))
                 .build();
     }
 }
